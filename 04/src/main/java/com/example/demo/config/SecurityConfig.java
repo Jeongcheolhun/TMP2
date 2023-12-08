@@ -1,6 +1,14 @@
 package com.example.demo.config;
 
 
+import com.example.demo.config.auth.exceptionHandler.CustomAccessDeniedHandler;
+import com.example.demo.config.auth.exceptionHandler.CustomAuthenticationEntryPoint;
+import com.example.demo.config.auth.loginHandler.CustomAuthenticationFailureHandler;
+import com.example.demo.config.auth.loginHandler.CustomLoginSuccessHandler;
+import com.example.demo.config.auth.logoutHandler.CustomLogoutHandler;
+import com.example.demo.config.auth.logoutHandler.CustomLogoutSuccessHandler;
+import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,10 +19,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig  {
+
+
+    @Autowired
+    private HikariDataSource dataSource;
 
     @Bean
     public SecurityFilterChain config(HttpSecurity http) throws Exception {
@@ -38,6 +52,9 @@ public class SecurityConfig  {
         http.formLogin(login->{
             login.permitAll();
             login.loginPage("/login");
+            login.successHandler(new CustomLoginSuccessHandler());
+            login.failureHandler(new CustomAuthenticationFailureHandler());
+
         });
 
         //로그아웃
@@ -45,9 +62,40 @@ public class SecurityConfig  {
                 (logout)->{
                     logout.permitAll();
                     logout.logoutUrl("/logout");
+                    logout.addLogoutHandler(new CustomLogoutHandler());
+                    logout.logoutSuccessHandler(new CustomLogoutSuccessHandler());
                 }
         );
+
+        //예외처리
+        http.exceptionHandling(
+                ex->{
+                    ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint());
+                    ex.accessDeniedHandler(new CustomAccessDeniedHandler());
+                }
+        );
+
+        //RememberMe
+        http.rememberMe(
+                rm->{
+                    rm.key("rememberMeKey");
+                    rm.rememberMeParameter("remember-me");
+                    rm.alwaysRemember(false);
+                    rm.tokenValiditySeconds(3600);
+                    rm.tokenRepository(tokenRepository());
+                }
+        );
+
         return http.build();
+    }
+
+    // REMEMBER ME 처리 BEAN
+    @Bean
+    public PersistentTokenRepository tokenRepository() {
+        JdbcTokenRepositoryImpl repo = new JdbcTokenRepositoryImpl();
+//        repo.setCreateTableOnStartup(true);
+        repo.setDataSource(dataSource);
+        return repo;
     }
 
 
