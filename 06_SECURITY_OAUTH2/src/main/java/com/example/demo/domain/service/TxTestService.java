@@ -42,13 +42,13 @@ public class TxTestService {
     @Autowired
     private MemoRepository memoRepository;
 
-    //@Transactional(rollbackFor = Exception.class,transactionManager = "jpaTransactionManager")
+    @Transactional(rollbackFor = Exception.class,transactionManager = "jpaTransactionManager")
     public void txRepository() throws Exception {
         log.info("[TxTestService] txRepository..");
 
         memoRepository.save(new Memo(1,"aaaa"));
-        //throw new Exception();
-        memoRepository.save(new Memo(1,"bbbb"));
+        throw new Exception();
+//        memoRepository.save(new Memo(1,"bbbb"));
     }
 
 

@@ -91,6 +91,13 @@ public class SecurityConfig  {
                 }
         );
 
+        //Oauth2
+        http.oauth2Login(
+                oauth2->{
+                    oauth2.loginPage("/login");
+                }
+        );
+
         return http.build();
 }
     //REMEMBER ME 처리 BEAN

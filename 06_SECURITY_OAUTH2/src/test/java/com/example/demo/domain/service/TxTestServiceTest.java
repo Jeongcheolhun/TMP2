@@ -14,14 +14,14 @@ class TxTestServiceTest {
     private TxTestService txTestService;
 
     @Test
-    @Transactional(transactionManager = "dataSourceTransactionManager")
-    public void t1()   {
+    @Transactional(transactionManager = "dataSourceTransactionManager",rollbackFor = Exception.class)
+    public void t1() throws Exception   {
         txTestService.txMapper();
     }
 
 
     @Test
-    //@Transactional(transactionManager = "jpaTransactionManager",rollbackFor = Exception.class)
+    @Transactional(transactionManager = "jpaTransactionManager",rollbackFor = Exception.class)
     public void t2() throws Exception {
         txTestService.txRepository();
     }
