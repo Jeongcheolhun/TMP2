@@ -1,0 +1,57 @@
+-------------
+전역 설정
+-------------
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name
+
+
+--------------------------
+Local -> Remote
+--------------------------
+-------------
+Local Git 생성
+-------------
+git init 
+
+-------------
+Staging Area 
+-------------
+git add * 
+
+-------------
+Repository added
+-------------
+git commit -m 'message'
+
+-------------
+main branch 생성
+-------------
+git branch main
+git switch main
+
+-------------
+remote repository added
+-------------
+git remote add origin url경로
+
+-------------
+Remote Repository push
+-------------
+git push origin
+
+
+--------------------------
+Remote -> Local
+--------------------------
+
+git clone RemoteRepositoryURL
+수정~
+git add * 
+git commit -m .
+git push origin
+
+충돌이 일어나면
+git pull origin
+
+
+
