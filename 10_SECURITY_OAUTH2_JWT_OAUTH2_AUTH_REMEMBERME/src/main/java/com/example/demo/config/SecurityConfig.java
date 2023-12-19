@@ -8,6 +8,7 @@ import com.example.demo.config.auth.jwt.JwtProperties;
 import com.example.demo.config.auth.jwt.JwtTokenProvider;
 import com.example.demo.config.auth.loginHandler.CustomAuthenticationFailureHandler;
 import com.example.demo.config.auth.loginHandler.CustomLoginSuccessHandler;
+import com.example.demo.config.auth.loginHandler.Oauth2JwtLoginSuccessHandler;
 import com.example.demo.config.auth.logoutHandler.CustomLogoutHandler;
 import com.example.demo.config.auth.logoutHandler.CustomLogoutSuccessHandler;
 import com.example.demo.domain.repository.UserRepository;
@@ -111,6 +112,7 @@ public class SecurityConfig  {
         http.oauth2Login(
                 oauth2->{
                     oauth2.loginPage("/login");
+                    oauth2.successHandler(oauth2JwtLoginSuccessHandler());
                 }
         );
 
@@ -160,6 +162,12 @@ public class SecurityConfig  {
         return new CustomLoginSuccessHandler();
     }
 
+    //Oauth2JwtLoginSuccessHandler BEAN
+
+    @Bean
+    public Oauth2JwtLoginSuccessHandler oauth2JwtLoginSuccessHandler(){
+        return new Oauth2JwtLoginSuccessHandler();
+    }
 
 //    @Bean
 //    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {

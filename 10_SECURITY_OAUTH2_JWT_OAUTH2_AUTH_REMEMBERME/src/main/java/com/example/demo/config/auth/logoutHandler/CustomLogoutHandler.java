@@ -14,6 +14,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -41,6 +42,9 @@ public class CustomLogoutHandler implements LogoutHandler {
     @Value("${spring.security.oauth2.client.registration.naver.client-secret}")
     private String naverClientSecret;
 
+    @Autowired
+    private PersistentTokenRepository persistentTokenRepository;
+
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication auth) {
         System.out.println("[CustomLogoutHandler] logout()");
@@ -54,6 +58,11 @@ public class CustomLogoutHandler implements LogoutHandler {
                 .map(cookie -> cookie.getValue())
                 .orElse(null);
         Authentication authentication =  jwtTokenProvider.getAuthentication(token);
+        //----------------------------------------
+        //----------------------------------------
+        //REMEMBERME USER DELETE
+        //----------------------------------------
+        persistentTokenRepository.removeUserTokens(authentication.getName());
         //----------------------------------------
 
         PrincipalDetails principalDetails = (PrincipalDetails)authentication.getPrincipal();
