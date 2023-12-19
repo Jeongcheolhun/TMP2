@@ -1,9 +1,12 @@
 package com.example.demo.config.auth.logoutHandler;
 
 import com.example.demo.config.auth.PrincipalDetails;
+import com.example.demo.config.auth.jwt.JwtProperties;
+import com.example.demo.config.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +19,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class CustomLogoutHandler implements LogoutHandler {
@@ -26,7 +30,10 @@ public class CustomLogoutHandler implements LogoutHandler {
         restTemplate = new RestTemplate();
     }
 
-    //
+    //JWT
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
 
     @Value("${spring.security.oauth2.client.registration.naver.client-id}")
     private String naverClientId;
@@ -35,8 +42,19 @@ public class CustomLogoutHandler implements LogoutHandler {
     private String naverClientSecret;
 
     @Override
-    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication auth) {
         System.out.println("[CustomLogoutHandler] logout()");
+
+        //----------------------------------------
+        //JWT
+        //----------------------------------------
+        // cookie 에서 JWT token을 가져옵니다.
+        String token = Arrays.stream(request.getCookies())
+                .filter(cookie -> cookie.getName().equals(JwtProperties.COOKIE_NAME)).findFirst()
+                .map(cookie -> cookie.getValue())
+                .orElse(null);
+        Authentication authentication =  jwtTokenProvider.getAuthentication(token);
+        //----------------------------------------
 
         PrincipalDetails principalDetails = (PrincipalDetails)authentication.getPrincipal();
         String provider =  principalDetails.getUserDto().getProvider();
@@ -77,13 +95,12 @@ public class CustomLogoutHandler implements LogoutHandler {
 
 
         }else if(provider!=null&&provider.equals("google")){
-
             //AccessToken 추출
             String accessToken =  principalDetails.getAccessToken();
             //URL
             String url = "https://accounts.google.com/o/oauth2/revoke?token=" + accessToken;
-            //
-            ResponseEntity<String>resp = restTemplate.exchange(url, HttpMethod.GET, null, String.class);
+            //Rest Request
+            ResponseEntity<String>resp =  restTemplate.exchange(url,HttpMethod.GET,null,String.class);
 
             System.out.println("[CustomLogoutHandler] logout() google resp : " + resp);
 

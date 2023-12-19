@@ -1,9 +1,12 @@
 package com.example.demo.config.auth.logoutHandler;
 
 import com.example.demo.config.auth.PrincipalDetails;
+import com.example.demo.config.auth.jwt.JwtProperties;
+import com.example.demo.config.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -15,7 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
-
+import java.util.Arrays;
 
 
 public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
@@ -27,9 +30,24 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
 
     private final String REDIRECT_URI="http://localhost:8080/login";
 
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     @Override
-    public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication auth) throws IOException, ServletException {
         System.out.println("[CustomLogoutSuccessHandler] onLogoutSuccess()");
+
+        //----------------------------------------
+        //JWT
+        //----------------------------------------
+        // cookie 에서 JWT token을 가져옵니다.
+        String token = Arrays.stream(request.getCookies())
+                .filter(cookie -> cookie.getName().equals(JwtProperties.COOKIE_NAME)).findFirst()
+                .map(cookie -> cookie.getValue())
+                .orElse(null);
+        Authentication authentication =  jwtTokenProvider.getAuthentication(token);
+        //----------------------------------------
 
         PrincipalDetails principalDetails = (PrincipalDetails)authentication.getPrincipal();
         String provider =  principalDetails.getUserDto().getProvider();
@@ -43,10 +61,12 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
             String url = "https://nid.naver.com/nidlogin.logout";
             response.sendRedirect(url);
             return ;
+
         }else if(provider!=null&&provider.equals("google")){
-            String url = "http://accounts.google.com/logout";
+            String url = "http://accounts.google.com/Logout";
             response.sendRedirect(url);
             return ;
+
         }
 
 
